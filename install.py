@@ -20,38 +20,24 @@ import sys
 import os
 import subprocess
 
-"""
-This script installs a development environment in an easy way, instead of
-having to execute all the bootstrapping commands.
-"""
+print("e-cidadania install script %s\n" % __version__)
 
-__version__ = '0.2'
-print "e-cidadania install script %s\n" % __version__
-
-# Detect where is this file
 cwd = os.path.dirname(os.path.realpath(__file__))
-# Change the working dir
 os.chdir(cwd)
 
-# Execute the bootstrap
-print " * Bootstrapping..."
-a = subprocess.Popen('python bootstrap.py', shell=True)
-subprocess.Popen.wait(a)
+print(" * Bootstrapping...")
+a = subprocess.run('python bootstrap.py', shell=True)
 
-print " * Making buildout..."
-b = subprocess.Popen('bin/buildout')
-subprocess.Popen.wait(b)
+print(" * Making buildout...")
+b = subprocess.run('bin/buildout', shell=True)
 
-d = raw_input(' * Do you want to create the database? (y/n) ')
+d = input(' * Do you want to create the database? (y/n) ')
 
-if d == 'y':
-	os.chdir(cwd + '/src/')
-	c = subprocess.Popen('../bin/django syncdb', shell=True)
-	subprocess.Popen.wait(c)
-	sys.exit(0)
-elif d == 'n':
-	print 'Process finished'
-	print """You should follow this instructions blablabla"""
-	sys.exit(0)
+if d.lower() == 'y':
+	os.chdir(os.path.join(cwd, 'src'))
+	c = subprocess.run('../bin/django syncdb', shell=True)
+elif d.lower() == 'n':
+	print('Process finished')
+	print("""You should follow this instructions blablabla""")
 else:
 	sys.exit(0)

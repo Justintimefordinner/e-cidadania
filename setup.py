@@ -31,9 +31,9 @@ setup(
     url = 'http://ecidadania.org',
     license = '3-clause BSD',
     install_requires = [
-        'django==1.5.1',
-        'PIL',
-        'python-dateutil==1.5',
+        'django==3.2.8',
+        'Pillow',
+        'python-dateutil',
         ],
     tests_require=[
         'nose',
@@ -46,4 +46,4 @@ setup(
                    },
     include_package_data = True,
     zip_safe = False,
-    )
+)
