@@ -15,27 +15,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Import all the settings.defaults settings
+import os
 from e_cidadania.settings.defaults import *
 
-# Registration mail settings. Please use a different mail server and account
-# during development than in production.
-#EMAIL_HOST = "mail.ecidadania.org"
-#EMAIL_PORT= 25
-#EMAIL_HOST_USER= ""
-#EMAIL_HOST_PASSWORD= ""
-#DEFAULT_FROM_EMAIL = ""
-#EMAIL_USE_TLS = True
+# Registration mail settings
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+EMAIL_USE_TLS = True
 
 # Time and zone configuration
 TIME_ZONE = 'Europe/London'
 LANGUAGE_CODE = 'en-gb'
 
-# Cache backend. Default: local memory storage
+# Cache backend.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake'
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
     }
 }
 
@@ -48,12 +47,12 @@ MANAGERS = ADMINS
 # Database configuration. Default: sqlite3
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'e_cidadania/db/development.db',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 

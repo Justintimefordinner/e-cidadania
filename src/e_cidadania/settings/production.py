@@ -15,15 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from e_cidadania.settings.defaults import *
 
 # Registration mail settings
-# EMAIL_HOST = ""
-# EMAIL_PORT=
-# EMAIL_HOST_USER=""
-# EMAIL_HOST_PASSWORD=""
-DEFAULT_FROM_EMAIL = ""
-# EMAIL_USE_TLS = True
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+EMAIL_USE_TLS = True
 
 # Time and zone configuration
 TIME_ZONE = 'Europe/Madrid'
@@ -32,8 +33,8 @@ LANGUAGE_CODE = 'es-es'
 # Cache backend.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake'
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
     }
 }
 
@@ -45,20 +46,19 @@ MANAGERS = ADMINS
 
 # Change this to your working domain! If this variable is empty, django
 # will return an error 500
-#ALLOWED_HOSTS = ['*'] # This allows any host. INSECURE!
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '8nwcwmtau*bnu0u=shmdkda^-tpn55ch%qeqc8xn#-77r8c*0a'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # Database configuration. Default: sqlite3
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'e_cidadania/db/development.db',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }

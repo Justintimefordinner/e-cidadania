@@ -20,6 +20,8 @@ Standard Image Field - This code belongs to the stdimage project located
 in http://github.com/humanfromearth/django-stdimage. The original project
 is not ported for Python 3 and gives errors during imports so I've been forced
 to include an all-in-one version of the project here.
+
+TODO: Migrate to Django Pictures https://github.com/codingjoe/django-pictures
 """
 
 import os, shutil

@@ -16,7 +16,7 @@
 # limitations under the License.
 
 from django.core.mail import EmailMessage, EmailMultiAlternatives
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template import RequestContext, loader, Context
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import ugettext_lazy as _
@@ -33,10 +33,10 @@ def invite(request):
     to the hard disk.
     """
     if request.method == "POST":
-        mail_addr = request.POST['email_addr']
-        raw_addr_list = mail_addr.split(',')
+        mail_addr = request.POST.get('email_addr')
+        raw_addr_list = mail_addr.split(',') if mail_addr else []
         addr_list = [x.strip() for x in raw_addr_list]
-        usr_msg = request.POST['mail_msg']
+        usr_msg = request.POST.get('mail_msg')
 
         plain_template = "invite/invite_plain.txt"
         html_template = "invite/invite.html"
@@ -51,7 +51,6 @@ def invite(request):
         email = EmailMultiAlternatives(_('Invitation to join e-cidadania'), plain_msg, settings.DEFAULT_FROM_EMAIL, [], addr_list)
         email.attach_alternative(html_msg, 'text/html')
         email.send(fail_silently=False)
-        return render_to_response('invite_done.html',
-                                  context_instance=RequestContext(request))
+        return render(request, 'invite_done.html')
     uri = request.build_absolute_uri("/")
-    return render_to_response('invite.html', {"uri": uri}, context_instance=RequestContext(request))
+    return render(request, 'invite.html', {"uri": uri})

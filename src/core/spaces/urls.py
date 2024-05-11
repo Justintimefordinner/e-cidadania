@@ -19,7 +19,7 @@
 This file contains all the URLs that e_cidadania will inherit when the user
 access to '/spaces/'.
 """
-from django.conf.urls import patterns, url, include
+from django.urls import path, re_path, include
 
 from core.spaces.views.spaces import ViewSpaceIndex, ListSpaces, \
     DeleteSpace
@@ -35,116 +35,100 @@ from core.spaces.url_names import *
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
-urlpatterns = patterns('',
+urlpatterns = [
 
     # RSS Feed
-    url(r'^(?P<space_url>\w+)/rss/$', SpaceFeed(), name=SPACE_FEED),
+    path('<str:space_url>/rss/', SpaceFeed.as_view(), name=SPACE_FEED),
 
     # News
-    url(r'^(?P<space_url>\w+)/news/',
+    path('<str:space_url>/news/',
         include('apps.ecidadania.news.urls')),
 
     # Proposals
-    url(r'^(?P<space_url>\w+)/proposal/',
+    path('<str:space_url>/proposal/',
         include('apps.ecidadania.proposals.urls')),
 
     # Calendar
-    url(r'^(?P<space_url>\w+)/calendar/',
+    path('<str:space_url>/calendar/',
         include('apps.ecidadania.cal.urls')),
 
     # Debates
-    url(r'^(?P<space_url>\w+)/debate/',
+    path('<str:space_url>/debate/',
         include('apps.ecidadania.debate.urls')),
 
     # Votes
-    url(r'^(?P<space_url>\w+)/voting/',
+    path('<str:space_url>/voting/',
         include('apps.ecidadania.voting.urls')),
 
-)
-
-# Document URLs
-urlpatterns += patterns('',
-
-    url(r'^(?P<space_url>\w+)/docs/add/$', AddDocument.as_view(),
+    # Document URLs
+    path('<str:space_url>/docs/add/', AddDocument.as_view(),
         name=DOCUMENT_ADD),
 
-    url(r'^(?P<space_url>\w+)/docs/(?P<doc_id>\d+)/edit/$',
+    path('<str:space_url>/docs/<int:doc_id>/edit/',
         EditDocument.as_view(), name=DOCUMENT_EDIT),
 
-    url(r'^(?P<space_url>\w+)/docs/(?P<doc_id>\d+)/delete/$',
+    path('<str:space_url>/docs/<int:doc_id>/delete/',
         DeleteDocument.as_view(), name=DOCUMENT_DELETE),
 
-    url(r'^(?P<space_url>\w+)/docs/$', ListDocs.as_view(),
+    path('<str:space_url>/docs/', ListDocs.as_view(),
         name=DOCUMENT_LIST),
 
-)
-
-# Event URLs
-urlpatterns += patterns('',
-
-    url(r'^(?P<space_url>\w+)/event/add/$', AddEvent.as_view(),
+    # Event URLs
+    path('<str:space_url>/event/add/', AddEvent.as_view(),
         name=EVENT_ADD),
 
-    url(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/edit/$',
+    path('<str:space_url>/event/<int:event_id>/edit/',
         EditEvent.as_view(), name=EVENT_EDIT),
 
-    url(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/delete/$',
+    path('<str:space_url>/event/<int:event_id>/delete/',
         DeleteEvent.as_view(), name=EVENT_DELETE),
 
-    url(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/$',
+    path('<str:space_url>/event/<int:event_id>/',
         ViewEvent.as_view(), name=EVENT_VIEW),
 
-    url(r'^(?P<space_url>\w+)/event/$', ListEvents.as_view(),
+    path('<str:space_url>/event/', ListEvents.as_view(),
         name=EVENT_LIST),
 
-)
-
-# Intent URLs
-urlpatterns += patterns('',
-
-    url(r'^(?P<space_url>\w+)/intent/$',
+    # Intent URLs
+    path('<str:space_url>/intent/',
         'core.spaces.views.intent.add_intent', name=INTENT_ADD),
 
-    url(r'^(?P<space_url>\w+)/intent/approve/(?P<token>\w+)/$',
+    path('<str:space_url>/intent/approve/<str:token>/',
         ValidateIntent.as_view(), name=INTENT_VALIDATE),
 
-)
-
-# Spaces URLs
-urlpatterns += patterns('',
-
-    url(r'^(?P<space_url>\w+)/edit/',
+    # Spaces URLs
+    path('<str:space_url>/edit/',
         'core.spaces.views.spaces.edit_space', name=SPACE_EDIT),
 
-    url(r'^(?P<space_url>\w+)/delete/', DeleteSpace.as_view(),
+    path('<str:space_url>/delete/', DeleteSpace.as_view(),
         name=SPACE_DELETE),
 
-    url(r'^(?P<space_url>\w+)/news/$', RedirectArchive.as_view(),
+    path('<str:space_url>/news/', RedirectArchive.as_view(),
         name=SPACE_NEWS),
 
-    url(r'^(?P<space_url>\w+)/news/archive/$', ListPosts.as_view(),
+    path('<str:space_url>/news/archive/', ListPosts.as_view(),
         name=NEWS_ARCHIVE),
 
-    url(r'^(?P<space_url>\w+)/news/archive/(?P<year>\d{4})/$',
+    path('<str:space_url>/news/archive/<int:year>/',
         YearlyPosts.as_view(), name=NEWS_YEAR),
 
-    url(r'^(?P<space_url>\w+)/news/archive/(?P<year>\d{4})/(?P<month>\w+)/$',
+    path('<str:space_url>/news/archive/<int:year>/<str:month>/',
         MonthlyPosts.as_view(), name=NEWS_MONTH),
 
-    url(r'^add/$', 'core.spaces.views.spaces.create_space',
+    path('add/', 'core.spaces.views.spaces.create_space',
         name=SPACE_ADD),
 
-    url(r'^$', ListSpaces.as_view(), name=SPACE_LIST),
+    path('', ListSpaces.as_view(), name=SPACE_LIST),
 
-    # url(_(r'^go/'), GoToSpace.as_view(), name=GOTO_SPACE),
+    # path(_(r'^go/'), GoToSpace.as_view(), name=GOTO_SPACE),
 
-    url(r'^(?P<space_url>\w+)/roles/', 'core.spaces.views.spaces.edit_roles',
+    path('<str:space_url>/roles/', 'core.spaces.views.spaces.edit_roles',
         name=EDIT_ROLES),
 
-    url(r'^(?P<space_url>\w+)/search_user/',
+    path('<str:space_url>/search_user/',
         'core.spaces.views.spaces.search_user', name=SEARCH_USER),
 
-    url(r'^(?P<space_url>\w+)/$', ViewSpaceIndex.as_view(),
+    path('<str:space_url>/', ViewSpaceIndex.as_view(),
         name=SPACE_INDEX),
 
-)
+]

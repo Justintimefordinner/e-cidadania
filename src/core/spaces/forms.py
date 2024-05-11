@@ -21,88 +21,39 @@ documents, meetings and entities. Most of the forms are directly generated
 from the data models.
 """
 
-from django.forms import ModelForm, ValidationError, Select
-from django.forms.models import modelformset_factory
+from django.forms import ModelForm, ValidationError
 
 from core.spaces.models import Space, Document, Event, Entity
 
-
 class SpaceForm(ModelForm):
-
-    """
-    Returns a form to create or edit a space. SpaceForm inherits all the fields
-    from the :class:`Space` data model.
-
-    :rtype: HTML Form
-
-    .. versionadded:: 0.1
-    """
     class Meta:
         model = Space
 
-    def clean_logo(self):
+    def clean_image_file(self, file_field):
         valid_image_extensions = ['jpg', 'jpeg', 'png', 'gif']
-        logo_file = self.cleaned_data['logo']
+        image_file = self.cleaned_data[file_field]
         for extension in valid_image_extensions:
-            if logo_file.name.endswith(''.join(['.', extension])):
-                return logo_file
-
+            if image_file.name.endswith(''.join(['.', extension])):
+                return image_file
         raise ValidationError("Invalid file extension")
+
+    def clean_logo(self):
+        return self.clean_image_file('logo')
 
     def clean_banner(self):
-        valid_image_extensions = ['jpg', 'jpeg', 'png', 'gif']
-        banner_file = self.cleaned_data['banner']
-        for extension in valid_image_extensions:
-            if banner_file.name.endswith(''.join(['.', extension])):
-                return banner_file
-
-        raise ValidationError("Invalid file extension")
-
-# Create a formset for entities. This formset can be attached to any other form
-# but will be usually attached to SpaceForm
-EntityFormSet = modelformset_factory(Entity, extra=3)
-
+        return self.clean_image_file('banner')
 
 class DocForm(ModelForm):
-
-    """
-    Returns a form to create or edit a space related document, based on the
-    spaces.Document data model.
-
-    :rtype: HTML Form
-
-    .. versionadded:: 0.1
-    """
     class Meta:
         model = Document
 
-
 class RoleForm(ModelForm):
-
-    """
-    Returns a form to edit the administrators, moderators and users of the space.
-    This is the way that e-cidadania uses to filter content and access.
-
-    :rtype: HTML Form
-
-    .. versionadded:: 0.1.5
-    """
     class Meta:
         model = Space
-        exclude = ('name', 'url', 'date', 'description', 'date', 'logo', 'banner',
+        exclude = ('name', 'url', 'date', 'description', 'logo', 'banner',
             'author', 'mod_debate', 'mod_proposals', 'mod_news', 'mod_cal',
             'mod_docs', 'mod_voting', 'public')
 
-
 class EventForm(ModelForm):
-
-    """
-    Returns a form to create or edit a space related meeting, based on the
-    spaces.Meeting data model.
-
-    :rtype: HTML Form
-
-    .. versionadded:: 0.1
-    """
     class Meta:
         model = Event

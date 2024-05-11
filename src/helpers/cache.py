@@ -21,7 +21,6 @@ This file contains functions to help with caching.
 
 # Django's cache module
 from django.core.cache import cache
-from django.utils import six
 
 # Cached models
 from core.spaces.models import Space
@@ -42,8 +41,8 @@ def _get_cache_key_for_model(model, key):
     degree of uniqueness of keys across the cache.
     """
 
-    if not isinstance(key, six.string_types):
-        raise TypeError('key must be str or a unicode string')
+    if not isinstance(key, str):
+        raise TypeError('key must be a string')
 
     return model.__name__ + '_' + key
 

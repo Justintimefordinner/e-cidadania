@@ -19,66 +19,66 @@
 Main URLs for the e-cidadania platform.
 """
 
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.urls import path
+from core.views.index import index_view
+from core.views.invite import invite
+from core.views.explore import explore
 
 admin.autodiscover()
 
-# We put here the dictionary with all the packages for translatin JavaScript code
+# We put here the dictionary with all the packages for translating JavaScript code
 # Please refer to https://docs.djangoproject.com/en/dev/topics/i18n/internationalization/#specifying-translation-strings-in-javascript-code
 js_info_dict = {
     'packages': ('apps.ecidadania.debate',),
 }
 
-urlpatterns = patterns('',
+urlpatterns = [
     # i18n switcher
-    (r'^i18n/', include('django.conf.urls.i18n')),
-)
-
-urlpatterns += patterns('',
+    path('i18n/', include('django.conf.urls.i18n')),
 
     # Django administration
-    (r'^admin/', include(admin.site.urls)),
+    path('admin/', admin.site.urls),
 
     # Index
-    url(r'^$', 'core.views.index.index_view', name='site-index'),
+    path('', index_view, name='site-index'),
 
     # User accounts
-    url(r'^accounts/', include('apps.thirdparty.userprofile.urls')),
+    path('accounts/', include('apps.thirdparty.userprofile.urls')),
 
     # REST API
-    url(r'^api/', include('apps.ecidadania.api.urls')),
+    path('api/', include('apps.ecidadania.api.urls')),
 
     # Spaces
-    url(r'^spaces/', include('core.spaces.urls')),
+    path('spaces/', include('core.spaces.urls')),
 
     # Invitations
-    url(r'^invite/', 'core.views.invite.invite', name='invite'),
+    path('invite/', invite, name='invite'),
 
     # Explore
-    url(r'^explore/$', 'core.views.explore.explore', name='explore'),
+    path('explore/', explore, name='explore'),
 
     # This urls is for the django comments system
-    url(r'^comments/', include('django.contrib.comments.urls')),
+    path('comments/', include('django.contrib.comments.urls')),
 
-    (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
+    path('jsi18n/', 'django.views.i18n.javascript_catalog', js_info_dict),
 
     # For smart_selects app
-    url(r'^chaining/', include('apps.thirdparty.smart_selects.urls')),
+    path('chaining/', include('apps.thirdparty.smart_selects.urls')),
 
     # This url is for the access to static pages. I hope this doesn't collide
     # with the index view
-    url(r'^(?P<slug>[\w\-]+)/', include('apps.ecidadania.staticpages.urls')),
-
-)
+    path('<slug:slug>/', include('apps.ecidadania.staticpages.urls')),
+]
 
 if settings.DEBUG:
     # Serve static files
     urlpatterns += staticfiles_urlpatterns()
     # Serve uploaded files
-    urlpatterns += patterns('',
+    urlpatterns += [
         url(r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
             {'document_root': settings.MEDIA_ROOT}),
-    )
+    ]

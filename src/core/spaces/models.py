@@ -17,19 +17,20 @@
 
 from datetime import datetime
 
-from django.core.validators import RegexValidator
-from django.db import models
-from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.core.validators import RegexValidator
+from django.db import models
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
+from .allowed_types import ALLOWED_CONTENT_TYPES
 #from .fields import StdImageField
 from .file_validation import ContentTypeRestrictedFileField
-from .allowed_types import ALLOWED_CONTENT_TYPES
 
 
 class Space(models.Model):
-
     """
     Spaces model. This model stores a "space" or "place" also known as a
     participative process in reality. Every place has a minimum set of
@@ -39,41 +40,40 @@ class Space(models.Model):
     (admins), moderators (mods) and regular users (users).
     """
     name = models.CharField(_('Name'), max_length=250, unique=True,
-        help_text=_('Max: 250 characters'))
-    url = models.CharField(_('URL'), max_length=100, unique=True,
-        validators=[RegexValidator(regex='^[a-z0-9_]+$',
-        message='Invalid characters in the space URL.')],
-        help_text=_('Valid characters are lowercase, digits and \
-                     underscore. This will be the accesible URL'))
-    description = models.TextField(_('Description'),
-        default=_('Write here your description.'))
-    pub_date = models.DateTimeField(_('Date of creation'), auto_now_add=True)
-    author = models.ForeignKey(User, blank=True, null=True,
-        verbose_name=_('Space creator'), help_text=_('Select a user that \
-        will be marked as creator of the space'))
-    # logo = StdImageField(upload_to='spaces/logos', size=(100, 75, False),
-    #     help_text = _('Valid extensions are jpg, jpeg, png and gif'),
-    #     blank=True, null=True)
-    # banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False),
-    #     help_text = _('Valid extensions are jpg, jpeg, png and gif'),
-    #     blank=True, null=True)
-    logo = models.ImageField(upload_to='spaces/logos', max_length=250,
-        help_text = _('Valid extensions are jpg, jpeg, png and gif'),
-        blank=True, null=True)
-    banner = models.ImageField(upload_to='spaces/banners', max_length=250,
-        help_text = _('Valid extensions are jpg, jpeg, png and gif'),
-        blank=True, null=True)
-    public = models.BooleanField(_('Public space'), help_text=_("This will \
-        make the space visible to everyone, but registration will be \
-        necessary to participate."))
+                            help_text=_('The name of the space. Max: 250 characters.'))
+    url = models.SlugField(_('URL'), max_length=100, unique=True,
+                           help_text=_('The URL of the space. This will be the accessible URL.'))
+    description = models.TextField(_('Description'), default=_('Write here your description.'),
+                                   help_text=_('The description of the space.'))
+    pub_date = models.DateTimeField(_('Date of creation'), auto_now_add=True,
+                                    help_text=_('The date the space was created.'))
+    author = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL,
+                               verbose_name=_('Space creator'), related_name='spaces',
+                               help_text=_('The user that will be marked as creator of the space.'))
+    logo = models.ImageField(upload_to='spaces/logos', max_length=250, blank=True, null=True,
+                             help_text=_('The logo of the space. Valid extensions are jpg, jpeg, png and gif.'))
+    banner = models.ImageField(upload_to='spaces/banners', max_length=250, blank=True, null=True,
+                               help_text=_('The banner of the space. Valid extensions are jpg, jpeg, png and gif.'))
+    public = models.BooleanField(_('Public space'), default=False,
+                                 help_text=_("If checked, this will make the space visible to everyone, but registration will be necessary to participate."))
 
     # Modules
-    mod_debate = models.BooleanField(_('Debate'))
-    mod_proposals = models.BooleanField(_('Proposals'))
-    mod_news = models.BooleanField(_('News'))
-    mod_cal = models.BooleanField(_('Calendar'))
-    mod_docs = models.BooleanField(_('Documents'))
-    mod_voting = models.BooleanField(_('Voting'))
+    MODULE_CHOICES = [
+        (False, _('Disabled')),
+        (True, _('Enabled')),
+    ]
+    mod_debate = models.BooleanField(_('Debate'), choices=MODULE_CHOICES, default=False,
+                                     help_text=_('Enable or disable the debate module.'))
+    mod_proposals = models.BooleanField(_('Proposals'), choices=MODULE_CHOICES, default=False,
+                                        help_text=_('Enable or disable the proposals module.'))
+    mod_news = models.BooleanField(_('News'), choices=MODULE_CHOICES, default=False,
+                                   help_text=_('Enable or disable the news module.'))
+    mod_cal = models.BooleanField(_('Calendar'), choices=MODULE_CHOICES, default=False,
+                                  help_text=_('Enable or disable the calendar module.'))
+    mod_docs = models.BooleanField(_('Documents'), choices=MODULE_CHOICES, default=False,
+                                   help_text=_('Enable or disable the documents module.'))
+    mod_voting = models.BooleanField(_('Voting'), choices=MODULE_CHOICES, default=False,
+                                     help_text=_('Enable or disable the voting module.'))
 
     class Meta:
         ordering = ['name']
@@ -86,36 +86,33 @@ class Space(models.Model):
             ('mod_space', 'Can moderate this space.')
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
-    @models.permalink
+    def __repr__(self):
+        return f"<Space: {self.name} ({self.url})>"
+
     def get_absolute_url(self):
-        return ('space-index', (), {
-                'space_url': self.url})
+        return reverse('space-index', args=[str(self.url)])
 
 
 class Entity(models.Model):
-
     """
     This model stores the name of the entities responsible for the creation
     of the space or supporting it.
     """
     name = models.CharField(_('Name'), max_length=100, unique=True)
-    website = models.CharField(_('Website'), max_length=100, null=True,
-        blank=True)
-    logo = models.ImageField(upload_to='spaces/logos', verbose_name=_('Logo'),
-        blank=True, null=True)
-    space = models.ForeignKey(Space, blank=True, null=True)
+    website = models.URLField(_('Website'), max_length=100, null=True, blank=True)
+    logo = models.ImageField(upload_to='spaces/logos', verbose_name=_('Logo'), blank=True, null=True)
+    space = models.ForeignKey(Space, blank=True, null=True, on_delete=models.CASCADE, related_name='entities')
 
     class Meta:
         ordering = ['name']
         verbose_name = _('Entity')
         verbose_name_plural = _('Entities')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
-
 
 class Document(models.Model):
 
@@ -141,17 +138,16 @@ class Document(models.Model):
         author'))
 
     def get_file_ext(self):
-        filename = self.docfile.name
-        extension = filename.split('.')
-        return extension[1].upper()
+        filename, extension = os.path.splitext(self.docfile.name)
+        return extension[1:].upper()
 
     def get_file_size(self):
-        if self.docfile.size < 1023:
-            return str(self.docfile.size) + " Bytes"
-        elif self.docfile.size >= 1024 and self.docfile.size <= 1048575:
-            return str(round(self.docfile.size / 1024.0, 2)) + " KB"
-        elif self.docfile.size >= 1048576:
-            return str(round(self.docfile.size / 1024000.0, 2)) + " MB"
+        size = self.docfile.size
+        units = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+        for unit in units:
+            if size < 1024.0:
+                return f"{size:.2f} {unit}"
+            size /= 1024.0
 
     class Meta:
         ordering = ['pub_date']
@@ -159,12 +155,8 @@ class Document(models.Model):
         verbose_name_plural = _('Documents')
         get_latest_by = 'pub_date'
 
-    # There is no 'view-document' view, so I'll leave the get_absolute_url
-    # method without permalink. Remember that the document files are accesed
-    # through the url() method in templates.
     def get_absolute_url(self):
-        return '/spaces/%s/docs/%s' % (self.space.url, self.id)
-
+        return reverse('spaces:docs', args=[self.space.url, self.id])
 
 class Event(models.Model):
 
@@ -192,7 +184,7 @@ class Event(models.Model):
         max_digits=17, decimal_places=15, help_text=_('Specify it in decimal'))
 
     def is_due(self):
-        if self.event_date < datetime.now():
+        if self.event_date < timezone.now():
             return True
         else:
             return False
@@ -208,29 +200,22 @@ class Event(models.Model):
             ('mod_event', 'Can moderate this event'),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('view-event', (), {
+        return reverse('view-event', kwargs={
             'space_url': self.space.url,
-            'event_id': str(self.id)})
+            'event_id': str(self.id)
+        })
 
 
 class Intent(models.Model):
-
-    """
-    Intent data model. Intent stores the reference of a user-token when a user
-    asks entering in a restricted space.
-
-    .. versionadded: 0.1.5
-    """
-    user = models.ForeignKey(User)
-    space = models.ForeignKey(Space)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    space = models.ForeignKey(Space, on_delete=models.CASCADE)
     token = models.CharField(max_length=32)
     requested_on = models.DateTimeField(auto_now_add=True)
 
     def get_approve_url(self):
-        site = Site.objects.all()[0]
-        return "http://%s%sintent/approve/%s" % (site.domain, self.space.get_absolute_url(), self.token)
+        site = Site.objects.get_current()
+        return "http://{}{}intent/approve/{}".format(site.domain, reverse('space-detail', args=[self.space.id]), self.token)

@@ -24,6 +24,7 @@ import sys
 import os
 import subprocess
 import argparse
+from contextlib import contextmanager
 
 __author__ = "Oscar Carballal Prego <oscar.carballal@cidadania.coop>"
 __license__ = "GPLv3"
@@ -64,7 +65,7 @@ Probable cause: the script is not being executed from the project root (usually 
 
         # We are going to add all the applications of the project, and create
         # a dictionary with appname:appdir values
-        print "\n >> Populating variables with applications...\n"
+        print("\n >> Populating variables with applications...\n")
         for app in self.applications:
             appdata = app.split('.')  # Separate all components
             # appdata.pop(0) # Remove project name, it's useless. This was for django <= 1.3
@@ -76,7 +77,16 @@ Probable cause: the script is not being executed from the project root (usually 
 
         # When we exit the for loop, create a dictionary with appname:app_path
         self.appDict = dict(zip(self.appnames, self.appdirs))
-        print self.appDict
+        print(self.appDict)
+
+    @contextmanager
+    def cd(self, path):
+        old_dir = os.getcwd()
+        os.chdir(path)
+        try:
+            yield
+        finally:
+            os.chdir(old_dir)
 
     def _iterator(self, command, action):
 
@@ -85,20 +95,18 @@ Probable cause: the script is not being executed from the project root (usually 
         command specified in the call.
         """
         for app, appdir in self.appDict.items():
-            os.chdir(self.cwd + '/' + appdir)
-            print '\n>> %s language catalog: %s' % (action, app)
-            for lang in self.languages:
-                a = subprocess.Popen(command + '-l %s' % (lang[0]), shell=True)
-                subprocess.Popen.wait(a)
+            with self.cd(os.path.join(self.cwd, appdir)):
+                print(f'\n>> {action} language catalog: {app}')
+                for lang in self.languages:
+                    subprocess.run(f'{command} -l {lang[0]}', shell=True)
 
-        print '\n>> %s site root language catalog.' % (action)
-        os.chdir(self.cwd + '/e_cidadania')
-        for lang in self.languages:
-            if action is not "Compiling":
-                a = subprocess.Popen(command + "-i 'apps/*' -l %s" % (lang[0]), shell=True)
-            else:
-                a = subprocess.Popen(command + "-l %s" % (lang[0]), shell=True)
-            subprocess.Popen.wait(a)
+        print(f'\n>> {action} site root language catalog.')
+        with self.cd(os.path.join(self.cwd, 'e_cidadania')):
+            for lang in self.languages:
+                if action != "Compiling":
+                    subprocess.run(f"{command} -i 'apps/*' -l {lang[0]}", shell=True)
+                else:
+                    subprocess.run(f"{command} -l {lang[0]}", shell=True)
 
     def make(self):
 
@@ -106,13 +114,13 @@ Probable cause: the script is not being executed from the project root (usually 
         Generate the language catalogs for the application and site root.
         """
         # Spit out the information
-        print "\n>> Languages to generate:"
+        print("\n>> Languages to generate:")
         for lang in self.languages:
-            print ' - ' + lang[1]
+            print(f' - {lang[1]}')
 
-        print "\n>> Installed applications:"
+        print("\n>> Installed applications:")
         for app in self.appDict.keys():
-            print ' - ' + app
+            print(f' - {app}')
 
         self._iterator('django-admin.py makemessages ', 'Generating')
         self._iterator('django-admin.py makemessages -d djangojs ', 'Generating JavaScript')
@@ -123,13 +131,13 @@ Probable cause: the script is not being executed from the project root (usually 
         Compile all the language catalogs.
         """
         # Spit out the information
-        print "\n>> Languages to generate:"
+        print("\n>> Languages to generate:")
         for lang in self.languages:
-            print ' - ' + lang[1]
+            print(f' - {lang[1]}')
 
-        print "\n>> Installed applications:"
+        print("\n>> Installed applications:")
         for app in self.appDict.keys():
-            print ' - ' + app
+            print(f' - {app}')
 
         self._iterator('django-admin.py compilemessages ', 'Compiling')
 
@@ -139,20 +147,18 @@ Probable cause: the script is not being executed from the project root (usually 
         Removes the language installed catalogs in the platform, leaving the
         locale directories clean for new catalogs.
         """
-        print '\n>> WARNING: This command will remove ALL the language catalogs, having to rebuild and translate them all.'
-        raw_input('\n Continue? (Ctrl-C to quit)')
+        print('\n>> WARNING: This command will remove ALL the language catalogs, having to rebuild and translate them all.')
+        input('\n Continue? (Ctrl-C to quit)')
         for app, appdir in self.appDict.items():
-            os.chdir(self.cwd + '/' + appdir)
-            print '\n>> Cleaning language catalogs for %s' % (app)
-            for lang in self.languages:
-                a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
-                subprocess.Popen.wait(a)
+            with self.cd(os.path.join(self.cwd, appdir)):
+                print(f'\n>> Cleaning language catalogs for {app}')
+                for lang in self.languages:
+                    subprocess.run(f'rm -rf locale/{lang[0]}', shell=True)
 
-        print '\n>> Cleaning site root language catalogs'
-        os.chdir(self.cwd)
-        for lang in self.languages:
-            a = subprocess.Popen('rm -rf locale/%s' % (lang[0]), shell=True)
-            subprocess.Popen.wait(a)
+        print('\n>> Cleaning site root language catalogs')
+        with self.cd(self.cwd):
+            for lang in self.languages:
+                subprocess.run(f'rm -rf locale/{lang[0]}', shell=True)
 
 lang = Language()
 parser = argparse.ArgumentParser(description='e-cidadania language catalog generator. This script manages all the .po and .mo files from templates, python code and javascript i18n (if used).')

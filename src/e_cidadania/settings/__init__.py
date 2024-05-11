@@ -15,15 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from . import defaults
-
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 __version__ = defaults.__version__
 __status__ = defaults.__status__
 
-if DEBUG:
+# Use environment variable to determine which settings to use
+ENVIRONMENT = os.getenv('DJANGO_ENVIRONMENT', 'development')
+
+if ENVIRONMENT == 'development':
     from .development import *
-else:
+elif ENVIRONMENT == 'production':
     from .production import *
+else:
+    raise ValueError("Invalid environment name")

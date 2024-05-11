@@ -15,15 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from django.contrib import messages
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render, redirect
 from django.utils.translation import ugettext_lazy as _
-from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
-
-from core.spaces.models import Space
+from django.urls import reverse_lazy
 from e_cidadania import settings
 
 
@@ -41,12 +36,11 @@ def index_view(request):
         #'cache_timeout': 500,
     }
 
-    if request.user.is_anonymous():
+    if not request.user.is_authenticated:
         messages.warning(request, _("Hi! It seems that it's your first time \
         here. Maybe you want to <a href=\"/accounts/register\">register</a> \
         or <a href=\"/accounts/login/\">login</a> if you have an account."))
 
-        return render_to_response('site_index.html', extra_context,
-                              context_instance=RequestContext(request))
+        return render(request, 'site_index.html', extra_context)
     else:
-        return HttpResponseRedirect(reverse('profile_overview'))
+        return redirect(reverse_lazy('profile_overview'))

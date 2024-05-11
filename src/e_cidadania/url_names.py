@@ -19,20 +19,13 @@
 Module for storing e_cidadania related URL names."
 """
 
-SITE_INDEX = 'site-index'
-
-INVITE = 'invite'
-
-LIST_SITE_NEWS = 'list-site-news'
-
-ADD_SITE_POST = 'add-site-post'
-
-DELETE_SITE_POST = 'delete-site-post'
-
-EDIT_SITE_POST = 'edit-site-post'
-
-VIEW_SITE_POST = 'view-site-post'
-
-SITE_FEED = 'site-feed'
-
-EXPLORE = 'explore'
+class SiteURLs:
+    INDEX = 'site-index'
+    INVITE = 'invite'
+    LIST_NEWS = 'list-site-news'
+    ADD_POST = 'add-site-post'
+    DELETE_POST = 'delete-site-post'
+    EDIT_POST = 'edit-site-post'
+    VIEW_POST = 'view-site-post'
+    FEED = 'site-feed'
+    EXPLORE = 'explore'

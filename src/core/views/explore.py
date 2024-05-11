@@ -16,8 +16,7 @@
 # limitations under the License.
 
 from django.utils.translation import ugettext_lazy as _
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from core.spaces.models import Space
 from apps.ecidadania.news.models import Post
@@ -31,8 +30,8 @@ def explore(request):
 
     .. versionadded:: 0.1.8
     """
-    spaces = Space.objects.all().filter(public=True)
-    recent_spaces = Space.objects.all().order_by('-date')[:5]
+    spaces = Space.objects.filter(public=True)
+    recent_spaces = Space.objects.order_by('-date')[:5]
     news = Post.objects.filter(space__public=True).order_by('-pub_date')
 
     extra_context = {
@@ -41,5 +40,4 @@ def explore(request):
         'news': news,
     }
 
-    return render_to_response('explore.html', extra_context,
-        context_instance=RequestContext(request))
+    return render(request, 'explore.html', extra_context)

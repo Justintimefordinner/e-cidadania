@@ -20,11 +20,20 @@ import sys
 import os
 import subprocess
 
+"""
+This script installs a development environment in an easy way, instead of
+having to execute all the bootstrapping commands.
+"""
+
+__version__ = '0.2'
 print("e-cidadania install script %s\n" % __version__)
 
+# Detect where is this file
 cwd = os.path.dirname(os.path.realpath(__file__))
+# Change the working dir
 os.chdir(cwd)
 
+# Execute the bootstrap
 print(" * Bootstrapping...")
 a = subprocess.run('python bootstrap.py', shell=True)
 

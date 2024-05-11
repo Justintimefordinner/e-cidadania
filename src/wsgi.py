@@ -15,16 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
+import sys
+
 try:
     import newrelic.agent
     newrelic.agent.initialize('/home/cidprod/deploy/newrelic.ini')
 except ImportError:
-    print " [WARNING] The New Relic agent is not installed on this machine."
+    print(" [WARNING] The New Relic agent is not installed on this machine.")
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'e_cidadania.settings'
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'e_cidadania.settings')
 
-import django.core.handlers.wsgi
-application = django.core.handlers.wsgi.WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
